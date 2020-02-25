@@ -12,8 +12,6 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 import pc_util
 
-DUMP_CONF_THRESH = 0.5 # Dump boxes with obj prob larger than that.
-
 def softmax(x):
     ''' Numpy function for softmax'''
     shape = x.shape
@@ -21,7 +19,7 @@ def softmax(x):
     probs /= np.sum(probs, axis=len(shape)-1, keepdims=True)
     return probs
 
-def dump_results(end_points, dump_dir, config, inference_switch=False):
+def dump_results(end_points, dump_dir, config, inference_switch=False, DUMP_CONF_THRESH=0.5, idx_beg=0):
     ''' Dump results.
 
     Args:
@@ -56,7 +54,7 @@ def dump_results(end_points, dump_dir, config, inference_switch=False):
 
     # OTHERS
     pred_mask = end_points['pred_mask'] # B,num_proposal
-    idx_beg = 0
+    #idx_beg = 0
 
     for i in range(batch_size):
         pc = point_clouds[i,:,:]

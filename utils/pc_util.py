@@ -197,6 +197,12 @@ def read_ply(filename):
     pc_array = np.array([[x, y, z] for x,y,z in pc])
     return pc_array
 
+def read_ply7(filename):
+    """ read XYZ point cloud from filename PLY file """
+    plydata = PlyData.read(filename)
+    pc = plydata['vertex'].data
+    pc_array = np.array([[x, y, z] for x,y,z,r,g,b,d in pc])
+    return pc_array
 
 def write_ply(points, filename, text=True):
     """ input: Nx3, write points to filename as PLY format. """
@@ -386,15 +392,8 @@ def write_bbox(scene_bbox, out_filename):
     
     return
 
-def write_oriented_bbox(scene_bbox, out_filename):
-    """Export oriented (around Z axis) scene bbox to meshes
-    Args:
-        scene_bbox: (N x 7 numpy array): xyz pos of center and 3 lengths (dx,dy,dz)
-            and heading angle around Z axis.
-            Y forward, X right, Z upward. heading angle of positive X is 0,
-            heading angle of positive Y is 90 degrees.
-        out_filename: (string) filename
-    """
+
+def get_oriented_bbox(scene_bbox):
     def heading2rotmat(heading_angle):
         pass
         rotmat = np.zeros((3,3))
@@ -409,19 +408,31 @@ def write_oriented_bbox(scene_bbox, out_filename):
         lengths = box[3:6]
         trns = np.eye(4)
         trns[0:3, 3] = ctr
-        trns[3,3] = 1.0            
+        trns[3,3] = 1.0
         trns[0:3,0:3] = heading2rotmat(box[6])
         box_trimesh_fmt = trimesh.creation.box(lengths, trns)
         return box_trimesh_fmt
 
     scene = trimesh.scene.Scene()
     for box in scene_bbox:
-        scene.add_geometry(convert_oriented_box_to_trimesh_fmt(box))        
-    
+        scene.add_geometry(convert_oriented_box_to_trimesh_fmt(box))
+
     mesh_list = trimesh.util.concatenate(scene.dump())
-    # save to ply file    
+    # save to ply file
+    return mesh_list
+
+def write_oriented_bbox(scene_bbox, out_filename):
+    """Export oriented (around Z axis) scene bbox to meshes
+    Args:
+        scene_bbox: (N x 7 numpy array): xyz pos of center and 3 lengths (dx,dy,dz)
+            and heading angle around Z axis.
+            Y forward, X right, Z upward. heading angle of positive X is 0,
+            heading angle of positive Y is 90 degrees.
+        out_filename: (string) filename
+    """
+    mesh_list = get_oriented_bbox(scene_bbox)
+    # save to ply file
     trimesh.io.export.export_mesh(mesh_list, out_filename, file_type='ply')
-    
     return
 
 def write_oriented_bbox_camera_coord(scene_bbox, out_filename):
